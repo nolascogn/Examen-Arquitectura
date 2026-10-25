@@ -97,48 +97,62 @@
     </section>
     <section class="workbench" aria-label="Herramientas de análisis">
       <article class="panel">
-        <div class="panel-head"><h2>Valor entero</h2><span class="index">01 / 02</span></div>
+        <div class="panel-head"><h2>Complemento a 2</h2><span class="index">01 / 03</span></div>
         <form method="post" novalidate>
           {% csrf_token %}<input type="hidden" name="form_type" value="number">
           <div class="field-row">
             <div><label for="{{ number_form.number.id_for_label }}">{{ number_form.number.label }}</label>{{ number_form.number }}</div>
-            <div><label for="{{ number_form.base.id_for_label }}">{{ number_form.base.label }}</label>{{ number_form.base }}</div>
+            <div><label for="{{ number_form.bits.id_for_label }}">{{ number_form.bits.label }}</label>{{ number_form.bits }}</div>
           </div>
           {% for field in number_form %}{% for error in field.errors %}<ul class="errors"><li>{{ error }}</li></ul>{% endfor %}{% endfor %}
           <button type="submit">Analizar número <span aria-hidden="true">→</span></button>
         </form>
         {% if number_result %}
         <div class="result" aria-live="polite">
-          <p class="result-label">Representaciones</p>
+          <p class="result-label">Patrón de {{ number_result.bits }} bits</p>
           <div class="number-grid">
             <div class="number-value"><span>Decimal</span><strong>{{ number_result.decimal }}</strong></div>
             <div class="number-value"><span>Octal</span><strong>{{ number_result.octal }}</strong></div>
             <div class="number-value"><span>Hexadecimal</span><strong>0x{{ number_result.hexadecimal }}</strong></div>
-            <div class="number-value binary"><span>Binario · ajustado a bytes</span><strong>{{ number_result.binary }}</strong></div>
+            <div class="number-value binary"><span>Binario · agrupado de 4 en 4</span><strong>{{ number_result.binary }}</strong></div>
           </div>
-          <div class="metrics"><span><b>{{ number_result.significant_bits }}</b> bits significativos</span><span><b>{{ number_result.bytes }}</b> byte{{ number_result.bytes|pluralize:"s" }}</span></div>
+          <div class="metrics"><span>Bit de signo (MSB): <b>{{ number_result.sign_bit }}</b> · {{ number_result.sign_meaning }}</span><span>Interpretado sin signo: <b>{{ number_result.unsigned_value }}</b></span></div>
         </div>
         {% endif %}
       </article>
       <article class="panel">
-        <div class="panel-head"><h2>Cadena UTF-8</h2><span class="index">02 / 02</span></div>
+        <div class="panel-head"><h2>Texto y codificaciones</h2><span class="index">02 / 03</span></div>
         <form method="post" novalidate>
           {% csrf_token %}<input type="hidden" name="form_type" value="text">
-          <label for="{{ text_form.text.id_for_label }}">Texto · máximo 20 caracteres</label>{{ text_form.text }}
+          <label for="{{ text_form.text.id_for_label }}">Texto · máximo 15 caracteres</label>{{ text_form.text }}
           {% for error in text_form.text.errors %}<ul class="errors"><li>{{ error }}</li></ul>{% endfor %}
           <button type="submit">Desglosar caracteres <span aria-hidden="true">→</span></button>
         </form>
-        {% if character_rows %}
+        {% if text_result %}
         <div class="table-wrap" aria-live="polite">
           <table>
-            <thead><tr><th>Carácter</th><th>Decimal</th><th>Punto U+</th><th>Hex</th><th>Bytes UTF-8</th></tr></thead>
-            <tbody>{% for row in character_rows %}<tr><td>{{ row.character }}</td><td>{{ row.decimal }}</td><td>{{ row.codepoint }}</td><td>{{ row.hexadecimal }}</td><td>{{ row.utf8 }}</td></tr>{% endfor %}</tbody>
+            <thead><tr><th>Carácter</th><th>Punto de código</th><th>Bytes UTF-8</th><th>Cantidad UTF-8</th><th>Cantidad UTF-16</th></tr></thead>
+            <tbody>{% for row in text_result.rows %}<tr><td>{{ row.character }}</td><td>{{ row.codepoint }}</td><td>{{ row.utf8 }}</td><td>{{ row.utf8_count }} bytes</td><td>{{ row.utf16_count }} bytes</td></tr>{% endfor %}</tbody>
           </table>
+          <div class="metrics"><span>Total UTF-8: <b>{{ text_result.utf8_total }} bytes</b></span><span>Total UTF-16: <b>{{ text_result.utf16_total }} bytes</b></span></div>
         </div>
         {% endif %}
       </article>
     </section>
-    <footer class="foot"><span>Rango entero: 0—65 535</span><span>Base 02 · 08 · 10 · 16</span></footer>
+    <section class="history" aria-label="Historial de conversiones">
+      <div class="panel-head"><h2>Últimas conversiones</h2><span class="index">03 / 03 · hasta 10 registros</span></div>
+      {% if history %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Entero</th><th>Bits</th><th>Binario</th><th>Hexadecimal</th><th>Octal</th><th>Sin signo</th></tr></thead>
+          <tbody>{% for item in history %}<tr><td>{{ item.value }}</td><td>{{ item.bits }}</td><td>{{ item.binary }}</td><td>{{ item.hexadecimal }}</td><td>{{ item.octal }}</td><td>{{ item.unsigned_value }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="intro-copy">Todavía no hay conversiones guardadas.</p>
+      {% endif %}
+    </section>
+    <footer class="foot"><span>Complemento a 2 · 8, 16 y 32 bits</span><span>UTF-8 · UTF-16</span></footer>
   </main>
 </body>
 </html>
